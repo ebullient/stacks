@@ -35,11 +35,9 @@ RUN mkdir -p /mvn/repository \
     else \
       export IMAGE_VERSION=${MAJOR_VERSION}; \
     fi \
- && export MAVEN_ARTIFACT_VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}" \
  && sed -i -e "s|{{APPSODY_STACK}}|${IMAGE_REGISTRY_ORG}/${STACK_ID}:${IMAGE_VERSION}|" \
            -e "s|{{APPSODY_STACK_FULL}}|${IMAGE_REGISTRY_ORG}/${STACK_ID}:${MAVEN_ARTIFACT_VERSION}|" /project/Dockerfile \
  && sed -i -e "s|{{MAVEN_ARTIFACT_VERSION}}|${MAVEN_ARTIFACT_VERSION}|" /project/appsody-boot2-pom.xml
-
 
 WORKDIR /project/user-app
 
