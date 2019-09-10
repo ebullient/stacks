@@ -73,16 +73,17 @@ do
                             --label "org.opencontainers.image.created=$(date +%Y-%m-%dT%H:%M:%S%z)" \
                             --label "org.opencontainers.image.version=${stack_version}" \
                             --label "org.opencontainers.image.revision=$(git log -1 --pretty=%H)" \
+                            --label "appsody.stack=$IMAGE_REGISTRY_ORG/$stack_id:$stack_version" \
                             -t $IMAGE_REGISTRY_ORG/$stack_id \
+                            -t $IMAGE_REGISTRY_ORG/$stack_id:$stack_version \
                             -t $IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major \
                             -t $IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major.$stack_version_minor \
-                            -t $IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major.$stack_version_minor.$stack_version_patch \
                             -f $stack_dir/image/Dockerfile-stack $stack_dir/image
 
                         echo "$IMAGE_REGISTRY_ORG/$stack_id" >> $build_dir/image_list
+                        echo "$IMAGE_REGISTRY_ORG/$stack_id:$stack_version" >> $build_dir/image_list
                         echo "$IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major" >> $build_dir/image_list
                         echo "$IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major.$stack_version_minor" >> $build_dir/image_list
-                        echo "$IMAGE_REGISTRY_ORG/$stack_id:$stack_version_major.$stack_version_minor.$stack_version_patch" >> $build_dir/image_list
                     fi
                 else
                     echo -e "\n- SKIPPING stack image: $repo_name/$stack_id"
