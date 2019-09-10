@@ -156,16 +156,19 @@ case "${ACTION}" in
     package
   ;;
   debug)
+    export APPSODY_DEV_MODE=debug
     common
     export APPSODY_DEV_MODE=debug
     debug
   ;;
   run)
+    export APPSODY_DEV_MODE=run
     common
     export APPSODY_DEV_MODE=run
     run
   ;;
   test)
+    export APPSODY_DEV_MODE=test
     common
     export APPSODY_DEV_MODE=test
     test
