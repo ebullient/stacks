@@ -19,6 +19,8 @@ COPY ./LICENSE /licenses/
 
 COPY ./project /project
 COPY ./config /config
+COPY ./templates /templates
+
 COPY ./mvn-stack-settings.xml /usr/share/maven/conf/settings.xml
 COPY ./mvn-stack-settings.xml /project/mvn-stack-settings.xml
 
@@ -28,6 +30,10 @@ RUN cd /project \
 
 # Build utility for version range processing
 # Update Dockerfile to build from this appsody stack image (by range)
+# For the parent pom:
+# Use the git repository slug as the maven group: appsody/stacks --> dev.appsody.stacks
+# Use the stack id as the maven artifact id: java-spring-boot2
+# Use the passed in version as the mvn artifact version
 RUN mkdir -p /mvn/repository \
  && /project/util/check_version build \
  && if [ ${MAJOR_VERSION} -eq 0 ]; then \
@@ -35,9 +41,26 @@ RUN mkdir -p /mvn/repository \
     else \
       export IMAGE_VERSION=${MAJOR_VERSION}; \
     fi \
+ && export MAVEN_GROUP_ID="dev.$(echo $GIT_ORG_REPO | sed 's|/|.|')" \
+ && export MAVEN_ARTIFACT_ID="${STACK_ID}" \
+ && export MAVEN_ARTIFACT_VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}" \
+ && export MAVEN_VERSION_RANGE=$(/project/java-spring-boot2-build.sh range "${MAJOR_VERSION}.${MINOR_VERSION}") \
+ && echo ${MAVEN_GROUP_ID}:${MAVEN_ARTIFACT_ID}:${MAVEN_ARTIFACT_VERSION} - ${MAVEN_VERSION_RANGE} \
  && sed -i -e "s|{{APPSODY_STACK}}|${IMAGE_REGISTRY_ORG}/${STACK_ID}:${IMAGE_VERSION}|" \
            -e "s|{{APPSODY_STACK_FULL}}|${IMAGE_REGISTRY_ORG}/${STACK_ID}:${MAVEN_ARTIFACT_VERSION}|" /project/Dockerfile \
- && sed -i -e "s|{{MAVEN_ARTIFACT_VERSION}}|${MAVEN_ARTIFACT_VERSION}|" /project/appsody-boot2-pom.xml
+ && find /project /templates -name '*pom.xml' -exec \
+      sed -i -e "s|{{MAVEN_GROUP_ID}}|${MAVEN_GROUP_ID}|" \
+             -e "s|{{MAVEN_ARTIFACT_ID}}|${MAVEN_ARTIFACT_ID}|" \
+             -e "s|{{MAVEN_ARTIFACT_VERSION}}|${MAVEN_ARTIFACT_VERSION}|" \
+             -e "s|{{MAVEN_VERSION_RANGE}}|${MAVEN_VERSION_RANGE}|" {} \; \
+ && for x in /templates/*; do \
+      cd $x; \
+      name=$(basename $x); \
+      echo "stack: ${IMAGE_REGISTRY_ORG}/${STACK_ID}:${IMAGE_VERSION}" > .appsody-config.yaml; \
+      tar -czf /templates/${name}.tar.gz --exclude-from=.gitignore .; \
+      pwd; \
+      cd /templates; \
+      done
 
 WORKDIR /project/user-app
 
